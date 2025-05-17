@@ -1,0 +1,8 @@
+Suika Game Clone
+
+- Grape
+- Strawberry (2x Grape)
+- Oranage (2x Strawberry)
+- Mango (2x Mango)
+- Watermelon (2x Apple)
+
