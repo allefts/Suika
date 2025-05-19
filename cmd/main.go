@@ -1,7 +1,8 @@
 package main
 
 import (
-	_ "image/png"
+	"fmt"
+	"image"
 	"math/rand/v2"
 
 	"github.com/allefts/suika/models"
@@ -19,6 +20,7 @@ const (
 type Game struct {
 	Queue        []*models.Fruit
 	PlayedFruits []*models.Fruit
+	Colliders    []*image.Rectangle
 	Score        int
 	MouseX       int
 }
@@ -28,46 +30,59 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 }
 
 func (g *Game) Update() error {
-	//Keep track of mouse location
-	mx, _ := ebiten.CursorPosition()
-	g.MouseX = mx
-	g.dropCurrFruit()
+	mx, _ := ebiten.CursorPosition() //Mouse Location
+	g.MouseX = mx                    //Sets game mouseX position
+	g.dropCurrFruit()                //Handles drop of fruit
+
+	if len(g.PlayedFruits) != 0 {
+		lastDroppedFruit := g.PlayedFruits[len(g.PlayedFruits)-1]
+		for _, collider := range g.Colliders {
+			if collider.Overlaps(image.Rect(lastDroppedFruit.X, lastDroppedFruit.Y, lastDroppedFruit.X+16, lastDroppedFruit.Y+32)) {
+				fmt.Println("Fruit Collision")
+			}
+		}
+	}
 
 	return nil
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
-	//Draw top fruit
-	drawCurrFruit(screen, g.Queue[0].Img, g.MouseX)
-	//Draw played fruits
-	drawPlayedFruits(screen, g.PlayedFruits)
+	drawCurrFruit(screen, g.Queue[0].Img, g.MouseX)       //Draw Top Fruit
+	drawPlayedFruits(screen, g.PlayedFruits, g.Colliders) //Draw Played Fruits
 }
 
 func (g *Game) dropCurrFruit() {
-	//Keep track of mouse click status
-	clicked := inpututil.IsMouseButtonJustReleased(0)
+	clicked := inpututil.IsMouseButtonJustReleased(0) //Mouse was clicked
 	if clicked {
 		g.Queue[0].X = g.MouseX
-		g.PlayedFruits = append(g.PlayedFruits, g.Queue[0])
-		g.Queue = g.Queue[1:]
-		g.Queue = append(g.Queue, models.CreateFruit(rand.IntN(4)))
+		g.Queue[0].Y = 5
+
+		g.PlayedFruits = append(g.PlayedFruits, g.Queue[0])                                     //Add to played fruits
+		newCollider := image.Rect(g.Queue[0].X, g.Queue[0].Y, g.Queue[0].X+32, g.Queue[0].Y+32) //New collider
+		g.Colliders = append(g.Colliders, &newCollider)                                         //Append to colliders
+
+		g.Queue = g.Queue[1:]                                       //Remove from Queue
+		g.Queue = append(g.Queue, models.CreateFruit(rand.IntN(4))) //Append new fruit to queue
 	}
 
 }
 
-func drawPlayedFruits(screen *ebiten.Image, playedFruits []*models.Fruit) {
+func drawPlayedFruits(screen *ebiten.Image, playedFruits []*models.Fruit, colliders []*image.Rectangle) {
 	for _, fruit := range playedFruits {
+		if fruit.Y < (screenHeight - frameHeight) {
+			fruit.Y += 1
+		}
+
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Translate(float64(-frameWidth/2), 0)
-		op.GeoM.Translate(float64(fruit.X), screenHeight-frameHeight)
+		op.GeoM.Translate(float64(fruit.X), float64(fruit.Y))
 		screen.DrawImage(fruit.Img, op)
 	}
 }
 
 // Draws the image sent at the top of the screen
 func drawCurrFruit(screen *ebiten.Image, img *ebiten.Image, mx int) {
-	//X-axis collision
-	if mx > screenWidth-frameWidth/2 {
+	if mx > screenWidth-frameWidth/2 { //X-axis collision
 		mx = screenWidth - frameWidth/2
 	} else if mx < frameWidth/2 {
 		mx = 0 + frameWidth/2
@@ -85,8 +100,10 @@ func main() {
 
 	game := &Game{
 		Queue:        []*models.Fruit{models.CreateFruit(rand.IntN(4)), models.CreateFruit(rand.IntN(4)), models.CreateFruit(rand.IntN(4)), models.CreateFruit(rand.IntN(4)), models.CreateFruit(rand.IntN(4))},
-		Score:        0,
 		PlayedFruits: []*models.Fruit{},
+		Colliders:    []*image.Rectangle{},
+		Score:        0,
+		MouseX:       0,
 	}
 
 	ebiten.SetVsyncEnabled(true)
