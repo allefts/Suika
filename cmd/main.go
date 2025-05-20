@@ -4,6 +4,7 @@ import (
 	"image"
 	"image/color"
 	"math/rand/v2"
+	"fmt"
 
 	"github.com/allefts/suika/models"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -39,7 +40,7 @@ func (g *Game) Update() error {
 		lastDroppedFruit := g.PlayedFruits[len(g.PlayedFruits)-1]
 		for i := 0; i < len(g.PlayedFruits)-1; i++ {
 			if g.Colliders[i].Overlaps(image.Rect(lastDroppedFruit.X-16, lastDroppedFruit.Y, lastDroppedFruit.X+16, lastDroppedFruit.Y+32)) {
-				// fmt.Println(lastDroppedFruit.Name, g.PlayedFruits[i].Name)
+				fmt.Println(lastDroppedFruit.Name, g.PlayedFruits[i].Name)
 			}
 		}
 	}
