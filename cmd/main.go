@@ -4,7 +4,6 @@ import (
 	"image"
 	"image/color"
 	"math/rand/v2"
-	"fmt"
 
 	"github.com/allefts/suika/models"
 	"github.com/hajimehoshi/ebiten/v2"
@@ -36,14 +35,7 @@ func (g *Game) Update() error {
 	g.MouseX = mx                    //Sets game mouseX position
 	g.dropCurrFruit()                //Handles drop of fruit
 
-	if len(g.PlayedFruits) != 0 {
-		lastDroppedFruit := g.PlayedFruits[len(g.PlayedFruits)-1]
-		for i := 0; i < len(g.PlayedFruits)-1; i++ {
-			if g.Colliders[i].Overlaps(image.Rect(lastDroppedFruit.X-16, lastDroppedFruit.Y, lastDroppedFruit.X+16, lastDroppedFruit.Y+32)) {
-				fmt.Println(lastDroppedFruit.Name, g.PlayedFruits[i].Name)
-			}
-		}
-	}
+	g.checkCollisions()
 
 	return nil
 }
@@ -52,8 +44,31 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	drawCurrFruit(screen, g.Queue[0].Img, g.MouseX)       //Draw Top Fruit
 	drawPlayedFruits(screen, g.PlayedFruits, g.Colliders) //Draw Played Fruits
 
-	for _, collider := range g.Colliders {
+	for _, collider := range g.Colliders { //Collider Borders
 		vector.StrokeRect(screen, float32(collider.Min.X), float32(collider.Min.Y), float32(collider.Dx()), float32(collider.Dy()), 1.0, color.RGBA{255, 0, 0, 255}, true)
+	}
+}
+
+func (g *Game) checkCollisions() {
+	if len(g.PlayedFruits) != 0 {
+		lastDroppedFruit := g.PlayedFruits[len(g.PlayedFruits)-1]
+		for i := 0; i < len(g.PlayedFruits)-1; i++ {
+			if g.Colliders[i].Overlaps(image.Rect(lastDroppedFruit.X-16, lastDroppedFruit.Y, lastDroppedFruit.X+16, lastDroppedFruit.Y+32)) {
+				if lastDroppedFruit.Name == g.PlayedFruits[i].Name {
+
+					nextLvl := lastDroppedFruit.Lvl + 1
+					if nextLvl == 4 {
+						nextLvl = 0
+					}
+					//Merge Fruit
+					// g.PlayedFruits[i] = models.CreateFruit(g.PlayedFruits[i].Lvl + 1)
+					g.PlayedFruits[i] = &models.Fruit{Lvl: nextLvl, Name: models.CreateFruit(nextLvl).Name, Val: models.CreateFruit(nextLvl).Val, Img: models.CreateFruit(nextLvl).Img, X: (lastDroppedFruit.X + g.PlayedFruits[i].X) / 2, Y: (lastDroppedFruit.Y + g.PlayedFruits[i].Y) / 2}
+					g.PlayedFruits = g.PlayedFruits[:len(g.PlayedFruits)-1]
+				} else {
+
+				}
+			}
+		}
 	}
 }
 

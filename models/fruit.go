@@ -21,6 +21,7 @@ func init() {
 }
 
 type Fruit struct {
+	Lvl  int
 	Name string
 	Val  int
 	Img  *ebiten.Image
@@ -28,20 +29,20 @@ type Fruit struct {
 	Y    int
 }
 
-func NewFruit(name string, val int, img *ebiten.Image) *Fruit {
-	return &Fruit{Name: name, Val: val, Img: img}
+func NewFruit(lvl int, name string, val int, img *ebiten.Image) *Fruit {
+	return &Fruit{Lvl: lvl, Name: name, Val: val, Img: img, X: 0, Y: 5}
 }
 
 func CreateFruit(num int) *Fruit {
 	switch num {
 	case 0:
-		return NewFruit("Grape", 1, GrapeImg)
+		return NewFruit(0, "Grape", 1, GrapeImg)
 	case 1:
-		return NewFruit("Strawberry", 2, StrawberryImg)
+		return NewFruit(1, "Strawberry", 2, StrawberryImg)
 	case 2:
-		return NewFruit("Orange", 4, OrangeImg)
+		return NewFruit(2, "Orange", 4, OrangeImg)
 	case 3:
-		return NewFruit("Watermelon", 8, WatermelonImg)
+		return NewFruit(3, "Watermelon", 8, WatermelonImg)
 	}
 
 	return nil
